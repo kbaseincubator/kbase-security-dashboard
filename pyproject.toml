@@ -1,0 +1,18 @@
+[project]
+name = "kbase-security-dashboard"
+version = "0.1.0"
+description = "KBase security dashboard"
+readme = "README.md"
+authors = [{ name = "KBase Development Team" }]
+requires-python = ">=3.13"
+license = { text = "MIT" }
+dependencies = [
+    "requests==2.32.5",
+]
+
+[dependency-groups]
+dev = [
+    "ipython==9.6.0",
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
+]

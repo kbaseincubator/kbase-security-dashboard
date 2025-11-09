@@ -6,7 +6,7 @@ This is a small service to collect and store KBase repo security information in 
 
 ### Adding code
 
-* While in rapid initial development, we'll be pushing directly to `main`
+* While in rapid initial development, we'll PR to `main` without reviews.
 * Once the basic idea is working, we'll switch to an alpha / prototype stage, where
   we will PR (do not push directly) to `main`. In the future we will add a `develop` branch.
 * The PR creator merges the PR and deletes branches (after builds / tests / linters complete).
@@ -29,7 +29,7 @@ This is a small service to collect and store KBase repo security information in 
 
 ```
 uv sync --dev  # only the first time or when uv.lock changes
-PYTHONPATH=. uv run pytest test
+PYTHONPATH=src uv run pytest test
 ```
 
 ### Exit from prototype status

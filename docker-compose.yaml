@@ -1,0 +1,35 @@
+# This docker-compose is for developer convenience, not for running in production.
+
+volumes:
+  postgres_data:
+
+services:
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_DB: superset_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  superset:
+    image: apache/superset:5.0.0-dev
+    depends_on:
+      - postgres
+    environment:
+      SUPERSET_CONFIG_PATH: /opt/superset_config.py
+      SUPERSET_ADMIN_USERNAME: admin
+      SUPERSET_ADMIN_PASSWORD: admin
+      SUPERSET_ADMIN_FIRST_NAME: Admin
+      SUPERSET_ADMIN_LAST_NAME: User
+      SUPERSET_ADMIN_EMAIL: admin@example.com
+    ports:
+      - "8088:8088"
+    entrypoint: ["/bin/bash", "/opt/superset-entrypoint.sh"]
+    volumes:
+      - ./docker-compose/superset-entrypoint.sh:/opt/superset-entrypoint.sh:ro
+      - ./docker-compose/superset_config.py:/opt/superset_config.py

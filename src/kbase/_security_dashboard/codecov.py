@@ -32,6 +32,19 @@ class CommitCoverage:
     """ The commit's coverage. """
 
 
+@dataclass
+class CoverageData:
+    
+    owner_org: str
+    """ The rpeo owner or organization. """
+    
+    repo: str
+    """ The repo for the coverage data. """
+    
+    coverage: dict[str, list[CommitCoverage]]
+    """ The coverage data - a dict of branch to coverage data. """
+
+
 def _process_commit(commit: dict[str, Any], branches: set[str] | None) -> bool:
     return (
         commit["ci_passed"]
@@ -79,11 +92,11 @@ def get_coverage_history(
                 # Not documented as such... https://docs.codecov.com/reference/repos_commits_list
                 if since and timestamp < since:
                     logr.info(f"Hit 'since' limit of {since}, pulling no more records")
-                    return ret
+                    return CoverageData(owner_org=owner_or_org, repo=repo, coverage=dict(ret))
                 ret[r["branch"]].append(CommitCoverage(
                     commit_id=r["commitid"],
                     timestamp=timestamp,
                     coverage=r["totals"]["coverage"],
                 ))
         next_url = js["next"]
-    return ret
+    return CoverageData(owner_org=owner_or_org, repo=repo, coverage=dict(ret))

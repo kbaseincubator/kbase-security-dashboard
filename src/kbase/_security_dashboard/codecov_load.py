@@ -5,7 +5,7 @@ Load codecov data into postgres.
 import psycopg2
 from psycopg2.extras import execute_values
 
-from kbase._security_dashboard.codecov import CommitCoverage
+from kbase._security_dashboard.codecov import CoverageData
 
 
 def init_table(conn: psycopg2.extensions.connection):
@@ -37,18 +37,23 @@ def init_table(conn: psycopg2.extensions.connection):
 
 def save_coverage(
     conn: psycopg2.extensions.connection,
-    org_user: str,
-    repo: str,
-    coverage_data: dict[str, list[CommitCoverage]]
+    coverage_data: CoverageData,
 ):
     """
     Insert coverage data into the table.
     Ignores rows that would violate the unique key.
     """
     rows = []
-    for branch, commits in coverage_data.items():
+    for branch, commits in coverage_data.coverage.items():
         for c in commits:
-            rows.append((org_user, repo, branch, c.commit_id, c.timestamp, c.coverage))
+            rows.append((
+                coverage_data.owner_org,
+                coverage_data.repo,
+                branch,
+                c.commit_id,
+                c.timestamp,
+                c.coverage
+            ))
     
     if not rows:
         return

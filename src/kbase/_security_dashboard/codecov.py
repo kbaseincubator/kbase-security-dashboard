@@ -65,7 +65,7 @@ def get_coverage_history(
     owner_or_org - the owner or the organization that owns the repo.
     repo - the repo name.
     branches - only return data for the given branches.
-    since - only return data since the given date.
+    since - only return data since the given date, non-inclusive.
     
     Returns a dictionary of the git branch to a list of commits for that branch.
     """
@@ -90,7 +90,7 @@ def get_coverage_history(
                 timestamp=dateutil.parser.isoparse(r["timestamp"])
                 # assumes results are sorted by date, which seems to be the case
                 # Not documented as such... https://docs.codecov.com/reference/repos_commits_list
-                if since and timestamp < since:
+                if since and timestamp <= since:
                     logr.info(f"Hit 'since' limit of {since}, pulling no more records")
                     return CoverageData(owner_org=owner_or_org, repo=repo, coverage=dict(ret))
                 ret[r["branch"]].append(CommitCoverage(

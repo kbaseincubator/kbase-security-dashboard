@@ -18,7 +18,7 @@ def init_table(conn: psycopg2.extensions.connection):
     """
     with conn.cursor() as cur:
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS branch_test_status (
+            CREATE TABLE IF NOT EXISTS test_status (
                 org_user       VARCHAR(255) NOT NULL,
                 repo           VARCHAR(255) NOT NULL,
                 branch         VARCHAR(255) NOT NULL,
@@ -31,8 +31,8 @@ def init_table(conn: psycopg2.extensions.connection):
         
         # Create index for time-series queries
         cur.execute("""
-            CREATE INDEX IF NOT EXISTS idx_branch_test_status_date
-                ON branch_test_status (org_user, repo, branch, timestamp DESC)
+            CREATE INDEX IF NOT EXISTS idx_test_status_date
+                ON test_status (org_user, repo, branch, timestamp DESC)
         """)
         
         conn.commit()

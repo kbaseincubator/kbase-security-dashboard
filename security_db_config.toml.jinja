@@ -1,0 +1,51 @@
+[github]
+# Classic Personal Access Token with 'repo' scope. Fine grained tokens can work if only the
+# user's own repositories are accessed.
+token = "{{ SECDB_GITHHUB_TOKEN or "" }}"
+
+[postgres]
+host = "{{ SECDB_POSTGRES_HOST or "" }}"
+database = "{{ SECDB_POSTGRES_DB or "" }}"
+user = "{{ SECDB_POSTGRES_USER or "" }}"
+password = "{{ SECDB_POSTGRES_PWD or "" }}"
+port = {{ SECDB_POSTGRES_PORT or 5432 }}
+
+# To add repos, add a new [[repos]] entry with the org and repo keys specified.
+# Optional keys are
+# branches: An array of strings, each one corresponding to a branch name to query.
+#           Defaults to ["main", "master', "develop"]
+# test_workflows: a specifier for how to find which Github Actions correspond to tests.:
+#                 Omitted - Use the default regex that looks for "test" or "tests" surrounded by
+#                           whitespace, underscores, or hyphens and optionally preceded by a slash
+#                           or followed by a period in the action workflow path.
+#                           Finds the first action that matches the regex and uses the result for
+#                           the test status.
+#                 String - As above, but the string contains the regex.
+#                 Array[String] - Looks for exact matches on the workflow path to the given
+#                                 strings.
+#                                 Once it finds a match for a particular string, it stops looking
+#                                 for more  matches.
+
+[[repos]]
+org = "kbase"
+repo = "auth2"
+branches = ["master", "develop"]
+
+[[repos]]
+org = "kbase"
+repo = "narrative"
+branches = ["main", "develop"]
+test_workflows = [".github/workflows/build_prodrc_pr.yaml"]
+
+[[repos]]
+org = "kbase"
+repo = "workspace_deluxe"
+branches = ["master", "develop"]
+
+# TODO more repos
+
+[[repos]]
+org = "jgi-kbase"
+repo = "AssemblyHomologyService"
+branches = ["master", "develop"]
+

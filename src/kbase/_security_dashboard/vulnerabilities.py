@@ -20,8 +20,11 @@ _SEVERITY_MAP = {
     "moderate": "medium",
     "low": "low"
 }
+_IGNORE_SEVERITY = {"note"}
 
 def _get_severity(severity: str) -> str:
+    if severity in _IGNORE_SEVERITY:
+        return None
     if severity.lower() not in _SEVERITY_MAP:
         raise ValueError("unknown severity: " + severity)
     return _SEVERITY_MAP[severity.lower()]
@@ -104,7 +107,9 @@ def _fetch_dependabot_alerts(
         
         for alert in alerts:
             severity = alert.get("security_advisory", {}).get("severity", "").lower()
-            severity_counts[_get_severity(severity)] += 1
+            sev = _get_severity(severity)
+            if sev:
+                severity_counts[sev] += 1
         
         url = _parse_link_header(res.headers.get("link"))
         page += 1
@@ -155,8 +160,9 @@ def _fetch_code_scanning_alerts(
                 alert.get("rule", {}).get("severity") or
                 ""
             ).lower()
-            
-            severity_counts[_get_severity(severity)] += 1
+            sev = _get_severity(severity)
+            if sev:
+                severity_counts[sev] += 1
         
         url = _parse_link_header(res.headers.get("link"))
         page += 1

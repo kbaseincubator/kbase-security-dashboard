@@ -13,7 +13,7 @@ from typing import Any
 
 _GITHUB_API_URL = "https://api.github.com"
 _PER_PAGE = 100
-_DEFAULT_WORKFLOW_NAME_REGEX = re.compile(r'(?:^|[\s_-])tests?(?:[\s_-]|$)')
+_DEFAULT_WORKFLOW_PATH_REGEX = re.compile(r'(?:^|[\s_/-])tests?(?:[\s_\.-]|$)')
 
 
 @dataclass
@@ -22,8 +22,8 @@ class TestStatusSnapshot:
     timestamp: datetime.datetime
     """ When the workflow(s) completed (most recent if multiple). """
     
-    workflow_names: list[str]
-    """ Names of the workflow(s) included in this snapshot. """
+    workflow_paths: list[str]
+    """ Paths of the workflow(s) included in this snapshot. """
     
     success: bool
     """ Whether all tracked workflows succeeded (AND of all statuses). """
@@ -51,12 +51,15 @@ def _find_workflow_runs(
 ) -> dict[str, dict[str, Any]]:
     logr = logging.getLogger(__name__)
     if not workflow_filter:
-        pattern = _DEFAULT_WORKFLOW_NAME_REGEX
+        pattern = _DEFAULT_WORKFLOW_PATH_REGEX
     elif isinstance(workflow_filter, str):
         pattern = re.compile(workflow_filter)
     else:
         target_workflows = set(workflow_filter)
         pattern = None
+        logr.info(f"Using workflow filter {target_workflows}")
+    if pattern:
+        logr.info(f"Using workflow filter {pattern}")
     
     headers = {}
     if github_token:
@@ -88,22 +91,22 @@ def _find_workflow_runs(
         for run in workflow_runs:
             # Skip incomplete runs
             if run.get("status") == "completed":
-                workflow_name = run["name"]
+                workflow_path = run["path"]
                 
                 # Check if this workflow matches our criteria
                 if pattern:
-                    if pattern.search(workflow_name.lower()):
-                        matching_runs[workflow_name] = run
+                    if pattern.search(workflow_path.lower()):
+                        matching_runs[workflow_path] = run
                         logr.info(
-                            f"Found matching workflow '{workflow_name}' with pattern '{pattern}'"
+                            f"Found matching workflow '{workflow_path}' with pattern '{pattern}'"
                         )
                         # Found our match, we're done
                         break
                 else:
                     # For exact names, find the most recent run of each target workflow
-                    if workflow_name in target_workflows and workflow_name not in matching_runs:
-                        matching_runs[workflow_name] = run
-                        logr.info(f"Found workflow '{workflow_name}'")
+                    if workflow_path in target_workflows and workflow_path not in matching_runs:
+                        matching_runs[workflow_path] = run
+                        logr.info(f"Found workflow '{workflow_path}'")
         
         # Check if we're done
         if pattern and matching_runs:
@@ -137,10 +140,10 @@ def _get_branch_snapshot(
     # Get the most recent completion time and AND all statuses
     most_recent_time = None
     all_success = True
-    workflow_names = []
+    workflow_paths = []
     
-    for workflow_name, run in matching_runs.items():
-        workflow_names.append(workflow_name)
+    for workflow_path, run in matching_runs.items():
+        workflow_paths.append(workflow_path)
         
         # Parse completion time
         completed_at = parser.isoparse(run["updated_at"])
@@ -150,15 +153,15 @@ def _get_branch_snapshot(
         # Check if successful
         if not run.get("conclusion") == "success":
             all_success = False
-            logr.info(f"Workflow '{workflow_name}' status: {run.get('conclusion')}")
+            logr.info(f"Workflow '{workflow_path}' status: {run.get('conclusion')}")
     
     logr.info(
         f"Snapshot for {owner_or_org}/{repo} branch {branch}: "
-        f"{len(workflow_names)} workflow(s), success={all_success}"
+        f"{len(workflow_paths)} workflow(s), success={all_success}"
     )
     return TestStatusSnapshot(
         timestamp=most_recent_time,
-        workflow_names=workflow_names,
+        workflow_paths=workflow_paths,
         success=all_success,
     )
 
@@ -176,7 +179,7 @@ def get_test_status(
     owner_or_org - the owner or organization that owns the repo
     repo - the repo name
     branches - set of branch names to check (e.g., {'main', 'develop'})
-    workflow_filter - a filter to match workflow names. Either
+    workflow_filter - a filter to match workflow paths. Either
         * a regex pattern string,  If a pattern is provided, only first matching workflow
           is returned. The default is (?:^|[\s_-])tests?(?:[\s_-]|$)
         * a set of exact workflow names to track.

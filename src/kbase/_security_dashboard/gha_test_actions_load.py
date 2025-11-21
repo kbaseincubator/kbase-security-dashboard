@@ -23,7 +23,7 @@ def init_table(conn: psycopg2.extensions.connection):
                 repo           VARCHAR(255) NOT NULL,
                 branch         VARCHAR(255) NOT NULL,
                 timestamp      TIMESTAMPTZ NOT NULL,
-                workflow_names TEXT[] NOT NULL,
+                workflow_paths TEXT[] NOT NULL,
                 success        BOOLEAN NOT NULL,
                 PRIMARY KEY (org_user, repo, branch, timestamp)
             )
@@ -53,8 +53,8 @@ def _save_snapshot(
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO branch_test_status 
-                (org_user, repo, branch, timestamp, workflow_names, success)
+            INSERT INTO test_status 
+                (org_user, repo, branch, timestamp, workflow_paths, success)
             VALUES (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (org_user, repo, branch, timestamp) DO NOTHING
             """,
@@ -63,7 +63,7 @@ def _save_snapshot(
                 repo,
                 branch,
                 snapshot.timestamp,
-                snapshot.workflow_names,
+                snapshot.workflow_paths,
                 snapshot.success,
             )
         )
@@ -104,7 +104,7 @@ def take_snapshot(
     owner_org - the owner or organization that owns the repo
     repo - the repo name
     branches - set of branch names to check (e.g., {'main', 'develop'})
-    workflow_filter - a filter to match workflow names. Either
+    workflow_filter - a filter to match workflow paths. Either
         * a regex pattern string,  If a pattern is provided, only first matching workflow
           is returned. The default is (?:^|[\s_-])tests?(?:[\s_-]|$)
         * a set of exact workflow names to track.

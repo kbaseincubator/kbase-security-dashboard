@@ -16,13 +16,16 @@ from kbase._security_dashboard import codecov_load
 from kbase._security_dashboard import gha_test_actions_load
 from kbase._security_dashboard import dependabot_load
 from kbase._security_dashboard import vulnerabilities_load
+from kbase._security_dashboard import repo_metadata
 
 
 def _init_all_tables(conn: psycopg2.extensions.connection):
     """Initialize all database tables."""
     logr = logging.getLogger(__name__)
     logr.info("Initializing database tables...")
-    for mod in [codecov_load, gha_test_actions_load, dependabot_load, vulnerabilities_load]:
+    for mod in [
+        codecov_load, gha_test_actions_load, dependabot_load, vulnerabilities_load, repo_metadata
+    ]:
         mod.init_table(conn)
     logr.info("Database tables initialized")
 
@@ -45,8 +48,12 @@ def process_repos(
         test_workflows - a string or list of strings specifying which github action(s) are tests.
     """
     logr = logging.getLogger(__name__)
+    for i, r in enumerate(repos):
+        if not r.get("branches"):
+            repos[i] = dict(r) | {"branches": ["main", "master", 'develop"']}
     
     _init_all_tables(conn)
+    repo_metadata.upsert_repo_metadata(conn, repos)
     
     if not repos:
         raise ValueError("No repositories configured")
@@ -56,7 +63,7 @@ def process_repos(
     for repo_config in repos:
         org = repo_config["org"]
         repo = repo_config["repo"]
-        branches = repo_config.get("branches", ["main", "master", "develop"])
+        branches = repo_config["branches"]
         test_workflows = repo_config.get("test_workflows")
         
         logr.info(f"{'='*60}")

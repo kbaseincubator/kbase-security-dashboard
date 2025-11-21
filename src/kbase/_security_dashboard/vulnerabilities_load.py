@@ -17,19 +17,19 @@ def init_table(conn: psycopg2.extensions.connection):
             CREATE TABLE IF NOT EXISTS vulnerability_snapshots (
                 org_user       VARCHAR(255) NOT NULL,
                 repo           VARCHAR(255) NOT NULL,
-                snapshot_date  TIMESTAMPTZ NOT NULL,
+                timestamp  TIMESTAMPTZ NOT NULL,
                 critical       INTEGER NOT NULL,
                 high           INTEGER NOT NULL,
                 medium         INTEGER NOT NULL,
                 low            INTEGER NOT NULL,
-                PRIMARY KEY (org_user, repo, snapshot_date)
+                PRIMARY KEY (org_user, repo, timestamp)
             )
         """)
         
         # Create index for time-series queries
         cur.execute("""
             CREATE INDEX IF NOT EXISTS idx_vulnerability_snapshots_date
-                ON vulnerability_snapshots (org_user, repo, snapshot_date DESC)
+                ON vulnerability_snapshots (org_user, repo, timestamp DESC)
         """)
         
         conn.commit()
@@ -48,9 +48,9 @@ def save_snapshot(
         cur.execute(
             """
             INSERT INTO vulnerability_snapshots 
-                (org_user, repo, snapshot_date, critical, high, medium, low)
+                (org_user, repo, timestamp, critical, high, medium, low)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (org_user, repo, snapshot_date) DO NOTHING
+            ON CONFLICT (org_user, repo, timestamp) DO NOTHING
             """,
             (
                 snapshot.owner_org,

@@ -30,12 +30,11 @@ port = {{ SECDB_POSTGRES_PORT or 5432 }}
 org = "kbase"
 repo = "auth2"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "narrative"
-branches = ["main", "develop"]
 type = "core"
 test_workflows = [".github/workflows/build_prodrc_pr.yaml"]
 
@@ -43,75 +42,73 @@ test_workflows = [".github/workflows/build_prodrc_pr.yaml"]
 org = "kbase"
 repo = "workspace_deluxe"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "narrative-traefiker"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 # There don't appear to be any automated tests
 
 [[repos]]
 org = "kbase"
 repo = "execution_engine2"
 type = "core"
-branches = ["main", "develop"]
 
 [[repos]]
 org = "kbase"
 repo = "blobstore"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "handle_service2"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "service_wizard"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 # No GHA workflows at all. Planning switch to service wiz 2
 
 [[repos]]
 org = "kbase"
 repo = "catalog"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "sample_service"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "narrative_method_store"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "user_profile"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "staging_service"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "kb_sdk_plus"
 type = "core"
-branches = ["main", "develop"]
 # kb_sdk is no longer developed so not much point putting stats in the dashboard
 # or maybe we should...?
 
@@ -119,88 +116,83 @@ branches = ["main", "develop"]
 org = "kbase"
 repo = "groups"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "relation_engine"
 type = "core"
-branches = ["main", "develop"]
 
 [[repos]]
 org = "kbase"
 repo = "relation_engine_importers"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "search_api2"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "index_runner"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "file_cache_server"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "feeds"
 type = "core"
-branches = ["main", "develop"]
 
 [[repos]]
 org = "kbase"
 repo = "auth2_client_java"
 type = "support"
-branches = ["main", "develop"]
 
 [[repos]]
 org = "kbase"
 repo = "java_common"
 type = "support"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "java_test_utilities"
 type = "support"
-branches = ["main", "develop"]
 
 [[repos]]
 org = "kbase"
 repo = "shock_java_client"
 type = "support"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "kbase"
 repo = "java_kidl"
 type = "support"
-branches = ["main", "develop"]
 
 [[repos]]
 org = "kbaseapps"
 repo = "sketch_service"
 type = "core"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "jgi-kbase"
 type = "core"
 repo = "AssemblyHomologyService"
-branches = ["master", "develop"]
+main_branch = "master"
 
 [[repos]]
 org = "jgi-kbase"
 type = "core"
 repo = "IDMappingService"
-branches = ["master", "develop"]
+main_branch = "master"

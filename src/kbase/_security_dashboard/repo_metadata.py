@@ -16,7 +16,8 @@ def init_table(conn: psycopg2.extensions.connection):
                 org_user       VARCHAR(255) NOT NULL,
                 repo           VARCHAR(255) NOT NULL,
                 type           VARCHAR(50) NOT NULL,
-                branches       TEXT[] NOT NULL,
+                main_branch    VARCHAR(50) NOT NULL,
+                dev_branch     VARCHAR(50) NOT NULL,
                 created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 PRIMARY KEY (org_user, repo)
@@ -38,7 +39,8 @@ def upsert_repo_metadata(
             - org (str)
             - repo (str)
             - type (str) - e.g., "core", "support"
-            - branches (list[str])
+            - main_branch (str)
+            - dev_branch (str)
     """
     logr = logging.getLogger(__name__)
     
@@ -51,24 +53,27 @@ def upsert_repo_metadata(
             org = repo_config["org"]
             repo = repo_config["repo"]
             repo_type = repo_config["type"]
-            branches = repo_config["branches"]
+            main_branch = repo_config["main_branch"]
+            dev_branch = repo_config["dev_branch"]
             
             cur.execute(
                 """
-                INSERT INTO repo_metadata (org_user, repo, type, branches, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, NOW(), NOW())
+                INSERT INTO repo_metadata (org_user, repo, type, main_branch, dev_branch, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (org_user, repo) 
                 DO UPDATE SET
                     type = EXCLUDED.type,
-                    branches = EXCLUDED.branches,
+                    main_branch = EXCLUDED.main_branch,
+                    dev_branch = EXCLUDED.dev_branch,
                     updated_at = CASE
                         WHEN repo_metadata.type != EXCLUDED.type 
-                             OR repo_metadata.branches != EXCLUDED.branches
+                             OR repo_metadata.main_branch != EXCLUDED.main_branch
+                             OR repo_metadata.dev_branch != EXCLUDED.dev_branch
                         THEN NOW()
                         ELSE repo_metadata.updated_at
                     END
                 """,
-                (org, repo, repo_type, branches)
+                (org, repo, repo_type, main_branch, dev_branch)
             )
             
             logr.debug(f"Upserted metadata for {org}/{repo} (type={repo_type})")

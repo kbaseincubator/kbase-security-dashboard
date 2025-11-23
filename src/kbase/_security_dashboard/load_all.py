@@ -49,8 +49,12 @@ def process_repos(
     """
     logr = logging.getLogger(__name__)
     for i, r in enumerate(repos):
-        if not r.get("branches"):
-            repos[i] = dict(r) | {"branches": ["main", "master", 'develop"']}
+        d = dict(r)
+        if "main_branch" not in r:
+            d["main_branch"] = "main"
+        if "dev_branch" not in r:
+            d["dev_branch"] = "develop"
+        repos[i] = d
     
     _init_all_tables(conn)
     repo_metadata.upsert_repo_metadata(conn, repos)
@@ -63,15 +67,12 @@ def process_repos(
     for repo_config in repos:
         org = repo_config["org"]
         repo = repo_config["repo"]
-        branches = repo_config["branches"]
+        branches = {repo_config["main_branch"], repo_config["dev_branch"]}
         test_workflows = repo_config.get("test_workflows")
         
         logr.info(f"{'='*60}")
         logr.info(f"Processing {org}/{repo}")
         logr.info(f"{'='*60}")
-        
-        # Convert branches to set
-        branch_set = set(branches)
         
         # Convert test_workflows to appropriate type
         if test_workflows is None:
@@ -87,7 +88,7 @@ def process_repos(
         try:
             # 1. Sync coverage data
             logr.info(f"Syncing coverage data for {org}/{repo}...")
-            codecov_load.sync_coverage_data(conn, org, repo, branches=branch_set)
+            codecov_load.sync_coverage_data(conn, org, repo, branches=branches)
             
             # 2. Take test status snapshot
             logr.info(f"Taking test status snapshot for {org}/{repo}...")
@@ -95,7 +96,7 @@ def process_repos(
                 conn, 
                 org, 
                 repo, 
-                branches=branch_set,
+                branches=branches,
                 workflow_filter=workflow_filter,
                 github_token=github_token
             )

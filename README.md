@@ -4,6 +4,9 @@
 
 This is a small service to collect and store KBase repo security information in a database.
 
+**NOTE**: Only one instance of this service should be run at a time to avoid multiple simultaneous
+ETL processes.
+
 ### Adding code
 
 * While in rapid initial development, we'll PR to `main` without reviews.

@@ -12,6 +12,7 @@ from kbase.auth import AsyncKBaseAuthClient
 import logging
 from typing import NamedTuple, Any
 
+from kbase._security_dashboard.service.scheduler import RepoETLScheduler
 from kbase._security_dashboard.service.user import SecDBAuth, SecDBUser
 
 # The main point of this module is to handle all the application state in one place
@@ -25,6 +26,8 @@ class AppState():
     """ The name of the service. """
     auth: SecDBAuth
     """ The authentication client for the service. """
+    sched: RepoETLScheduler
+    """ The scheduler for the ETL process. """
 
 
 class RequestState(NamedTuple):
@@ -49,11 +52,34 @@ async def build_app(app: FastAPI, cfg: dict[str, Any], service_name: str):
         set([r.strip() for r in cfg["auth"]["admin_roles_full"].split(",")]),
     )
     logr.info("Done")
-    app.state._auth = kbauth
-    app.state._sdbstate = AppState(
-        service_name=service_name,
-        auth=auth,
-    )
+    sched = None
+    try:
+        logr.info("Bulding scheduler")
+        psg = cfg["postgres"]
+        sched = RepoETLScheduler(
+            cron_string=cfg["service"]["schedule_cron"],
+            github_token=cfg["github"]["token"],
+            repos=cfg["repos"],
+            postgres_host=psg["host"],
+            postgres_port=psg["port"],
+            postgres_database=psg["database"],
+            postgres_user=psg["user"] or None,
+            postgres_password=psg["password"] or None,
+        )
+        logr.info("Done")
+        app.state._auth = kbauth
+        app.state._sched = sched
+        app.state._sdbstate = AppState(
+            service_name=service_name,
+            auth=auth,
+            sched=sched,
+        )
+    
+    except Exception:
+        await kbauth.close()
+        if sched:
+            sched.close()
+        raise
 
 
 def get_app_state(r: Request) -> AppState:
@@ -70,6 +96,7 @@ async def destroy_app_state(app: FastAPI):
     Destroy the application state, shutting down services and releasing resources.
     """
     await app.state._auth.close()
+    app.state._sched.close()
     # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
     await asyncio.sleep(0.250)
 

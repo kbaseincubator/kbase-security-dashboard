@@ -5,6 +5,28 @@ volumes:
 
 services:
 
+  security-db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        UV_DEV_ARGUMENT: "--dev"
+    ports:
+      - 5000:5000
+    depends_on:
+      postgres:
+        condition: service_started
+    environment:
+      SECDB_KBASE_AUTH2_URL: https://ci.kbase.us/services/auth
+      SECDB_KBASE_AUTH2_ADMIN_ROLES: SECDB_SERVICE_ADMIN
+      SECDB_SERVICE_ROOT_PATH:
+      SECDB_GITHHUB_TOKEN: insert_token_here
+      SECDB_POSTGRES_HOST: postgres
+      SECDB_POSTGRES_DB: swp_dashboard
+      SECDB_POSTGRES_USER: superset
+      SECDB_POSTGRES_PWD: superset
+      SECDB_POSTGRES_PORT: 5432
+
   postgres:
     image: postgres:15
     environment:

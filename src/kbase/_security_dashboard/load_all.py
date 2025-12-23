@@ -44,7 +44,8 @@ def process_repos(
     repos - a list of repos. Each repo has the following keys:
         org - the github organization.
         repo  - the repo name.
-        branches - a list of branches to process, defaulting to [main, master, develop].
+        main_branch - the main branch name. Defaults to "main" if not present.
+        dev_branch - the develop branch name. Defaults to "develop" if not present.
         test_workflows - a string or list of strings specifying which github action(s) are tests.
     """
     logr = logging.getLogger(__name__)

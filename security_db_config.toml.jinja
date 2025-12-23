@@ -12,6 +12,11 @@ admin_roles_full = "{{ SECDB_KBASE_AUTH2_ADMIN_ROLES or "" }}"
 # to be defined here in order for the OpenAPI documentation to function.
 root_path = "{{ SECDB_SERVICE_ROOT_PATH or "" }}"
 
+# A standard Unix 5 item crontab string specifying when to run the ETL process. The server
+# time is UTC. The default is Sunday at 8 AM, which is 12 or 1 AM in Pacific time depending on
+# daylight savings.
+schedule_cron = "{{ SECDB_SCHEDULE_CRON or "* 8 * * sun" }}"
+
 [github]
 # Classic Personal Access Token with 'repo' scope. Fine grained tokens can work if only the
 # user's own repositories are accessed.

@@ -17,6 +17,7 @@ services:
       postgres:
         condition: service_started
     environment:
+      SECDB_SCHEDULE_CRON: "* 8 * * sun"
       SECDB_KBASE_AUTH2_URL: https://ci.kbase.us/services/auth
       SECDB_KBASE_AUTH2_ADMIN_ROLES: SECDB_SERVICE_ADMIN
       SECDB_SERVICE_ROOT_PATH:

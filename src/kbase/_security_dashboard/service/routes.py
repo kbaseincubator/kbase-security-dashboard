@@ -8,7 +8,8 @@ from fastapi import (
     Depends,
     Request,
 )
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, AwareDatetime
 from typing import Annotated
 
 from kbase._security_dashboard.service import app_state
@@ -22,6 +23,7 @@ from kbase._security_dashboard.service.user import SecDBUser, SecDBRole
 NOTES = "This service is a prototype"
 
 ROUTER_GENERAL = APIRouter(tags=["General"])
+ROUTER_REPO_ETL = APIRouter(tags=["Repo ETL"])
 
 _AUTH = KBaseHTTPBearer()
 
@@ -78,3 +80,31 @@ class WhoAmI(BaseModel):
 )
 async def whoami(r: Request, user: SecDBUser=Depends(_AUTH)) -> WhoAmI:
     return WhoAmI(user=user.user, roles=user.roles)
+
+
+class LastResult(BaseModel):
+    """ The last result of running the codecov / github ETL process.. """
+    time_complete: Annotated[AwareDatetime | None, Field(
+        example=[utcdatetime()],
+        description="The time the ETL process ran, or null if it has not yet run since the "
+           + "service started."
+    )] = None
+    exception: Annotated[str | None, Field(
+        description="The exception that occurred during the ETL run or null if the run was "
+            + "successful or there has not been a run yet"
+    )]
+
+
+@ROUTER_REPO_ETL.get(
+    "/last_result/",
+    response_model=LastResult,
+    summary="Get the result of the last ETL run.",
+    description="Get the result of the last ETL run. If the run failed, a 500 is returned."
+)
+async def last_result(r: Request, user: SecDBUser=Depends(_AUTH)) -> LastResult | JSONResponse:
+    _ensure_admin(user, "Only service admins can perform this operation")
+    res = app_state.get_app_state(r).sched.result
+    lr = LastResult(time_complete=res.time_complete, exception=res.exception)
+    if res.exception:
+        return JSONResponse(content=lr.model_dump(mode="json"), status_code=500)
+    return lr

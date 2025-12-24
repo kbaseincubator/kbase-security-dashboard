@@ -192,6 +192,7 @@ def create_app():
     app.add_middleware(GZipMiddleware)
     app.add_middleware(_AppMiddleWare)
     app.include_router(routes.ROUTER_GENERAL)
+    app.include_router(routes.ROUTER_REPO_ETL)
 
     async def build_app_wrapper():
         logr.info("Running app state build")

@@ -84,6 +84,26 @@ async def whoami(r: Request, user: SecDBUser=Depends(_AUTH)) -> WhoAmI:
     return WhoAmI(user=user.user, roles=user.roles)
 
 
+class NextRun(BaseModel):
+    """ Information about the next run of the ETL process. """
+    next_run: Annotated[AwareDatetime, Field(
+        examples=[utcdatetime()],
+        description="The time at which the ETL process is next scheduled to run."
+    )]
+
+
+@ROUTER_REPO_ETL.get(
+    "/next_run/",
+    response_model=NextRun,
+    summary="Get the time of the next run.",
+    description="Get the time the next ETL process run is scheduled to occur."
+)
+async def next_run(r: Request, user: SecDBUser=Depends(_AUTH)) -> NextRun:
+    _ensure_admin(user, "Only service admins can perform this operation")
+    nr = app_state.get_app_state(r).sched.get_next_runtime()
+    return NextRun(next_run=nr)
+
+
 class LastResult(BaseModel):
     """ The last result of running the codecov / github ETL process.. """
     time_complete: Annotated[AwareDatetime | None, Field(

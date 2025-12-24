@@ -12,6 +12,9 @@ from kbase._security_dashboard.load_all import process_repos
 import traceback
 
 
+_JOB_ID = "cron_scheduled"
+
+
 @dataclass
 class ETLResult:
     time_complete: datetime.datetime  | None = None
@@ -84,7 +87,7 @@ class RepoETLScheduler:
             max_instances=1,
             coalesce=True,
             replace_existing=True,
-            id="cron",
+            id=_JOB_ID,
         )
 
         self._scheduler.start()
@@ -131,6 +134,10 @@ class RepoETLScheduler:
             )
         else:
             self._logr.info("Job is already running, skipping immediate run")
+
+    def get_next_runtime(self) -> datetime.datetime:
+        """ Get the next time the job is currently scheduled to run. """
+        return self._scheduler.get_job(_JOB_ID).next_run_time
 
     def close(self):
         """Shutdown the scheduler."""

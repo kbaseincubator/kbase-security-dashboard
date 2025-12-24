@@ -2,15 +2,25 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
-from datetime import timezone
+from dataclasses import dataclass
+import datetime
 import logging
 import psycopg2
 
 from kbase._security_dashboard.service.timestamp import utcdatetime
 from kbase._security_dashboard.load_all import process_repos
+import traceback
 
 
 _JOB_ID = "repoETL"
+
+
+@dataclass
+class ETLResult:
+    time_complete: datetime.datetime  | None = None
+    """ The time the ETL process completed or None if the process has not yet been run. """
+    exception: None | str = None
+    """ The exception that occurred or None if the process was successful. """ 
 
 
 class RepoETLScheduler:
@@ -46,7 +56,7 @@ class RepoETLScheduler:
         """
         self._github_token = github_token
         self._repos = repos
-        self._last_exception = None
+        self.result = ETLResult()
         self._logr = logging.getLogger(__name__)
         self._pg_host = postgres_host
         self._pg_db = postgres_database
@@ -66,13 +76,13 @@ class RepoETLScheduler:
                 "default": ThreadPoolExecutor(5), 
                 "processpool": ProcessPoolExecutor(2), 
             },
-            timezone=timezone.utc,
+            timezone=datetime.timezone.utc,
         )
 
         # Add periodic cron job, replacing if redeployed/restarted
         self._scheduler.add_job(
             self._run,
-            trigger=CronTrigger.from_crontab(cron_string, timezone=timezone.utc),
+            trigger=CronTrigger.from_crontab(cron_string, timezone=datetime.timezone.utc),
             max_instances=1,
             coalesce=True,
             replace_existing=True,
@@ -92,19 +102,15 @@ class RepoETLScheduler:
         )
 
     def _run(self):
-        self._last_exception = None
         self._logr.info("Running ETL process in scheduler")
+        err = None
         try:
             process_repos(self._get_connection(), self._github_token, self._repos)
         except Exception as e:
-            self._last_exception = e
-
-    async def get_last_result(self) -> None | Exception:
-        """
-        Returns None if the last run of the ETL process was successful or an exception if
-        it wasn't.
-        """
-        return self._last_exception
+            self._logr.exception(f"ETL process failed: {e}")
+            err = traceback.format_exc()
+        self.result = ETLResult(time_complete=utcdatetime(), exception=err)
+            
 
     def run_now(self):
         """
@@ -113,7 +119,7 @@ class RepoETLScheduler:
         # Schedule immediate run using a DateTrigger with unique ID
         self._scheduler.add_job(
             self._run,
-            trigger=DateTrigger(run_date=utcdatetime(), timezone=timezone.utc),
+            trigger=DateTrigger(run_date=utcdatetime(), timezone=datetime.timezone.utc),
             max_instances=1,
             coalesce=True,
             replace_existing=False,

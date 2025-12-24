@@ -7,6 +7,8 @@ from fastapi import (
     APIRouter,
     Depends,
     Request,
+    Response,
+    status,
 )
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, AwareDatetime
@@ -108,3 +110,16 @@ async def last_result(r: Request, user: SecDBUser=Depends(_AUTH)) -> LastResult 
     if res.exception:
         return JSONResponse(content=lr.model_dump(mode="json"), status_code=500)
     return lr
+
+
+@ROUTER_REPO_ETL.post(
+    "/enqueue_run/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    summary="Enqueue an ETL run.",
+    description="Start an ETL run if one is not already running. If an ETL process is running "
+        + "this call is a no-op."
+)
+async def enqueue_run(r: Request, user: SecDBUser=Depends(_AUTH)):
+    _ensure_admin(user, "Only service admins can perform this operation")
+    app_state.get_app_state(r).sched.run_now()

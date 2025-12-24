@@ -12,9 +12,6 @@ from kbase._security_dashboard.load_all import process_repos
 import traceback
 
 
-_JOB_ID = "repoETL"
-
-
 @dataclass
 class ETLResult:
     time_complete: datetime.datetime  | None = None
@@ -57,6 +54,7 @@ class RepoETLScheduler:
         self._github_token = github_token
         self._repos = repos
         self.result = ETLResult()
+        self._job_running = False
         self._logr = logging.getLogger(__name__)
         self._pg_host = postgres_host
         self._pg_db = postgres_database
@@ -86,7 +84,7 @@ class RepoETLScheduler:
             max_instances=1,
             coalesce=True,
             replace_existing=True,
-            id=_JOB_ID,
+            id="cron",
         )
 
         self._scheduler.start()
@@ -102,6 +100,10 @@ class RepoETLScheduler:
         )
 
     def _run(self):
+        if self._job_running:
+            self._logr.info("Job already running, skipping this run")
+            return
+        self._job_running = True
         self._logr.info("Running ETL process in scheduler")
         err = None
         try:
@@ -109,22 +111,26 @@ class RepoETLScheduler:
         except Exception as e:
             self._logr.exception(f"ETL process failed: {e}")
             err = traceback.format_exc()
-        self.result = ETLResult(time_complete=utcdatetime(), exception=err)
-            
+        finally:
+            self.result = ETLResult(time_complete=utcdatetime(), exception=err)
+            self._job_running = False
 
     def run_now(self):
         """
         Enqueue an immediate run if the the job is not currently running.
         """
-        # Schedule immediate run using a DateTrigger with unique ID
-        self._scheduler.add_job(
-            self._run,
-            trigger=DateTrigger(run_date=utcdatetime(), timezone=datetime.timezone.utc),
-            max_instances=1,
-            coalesce=True,
-            replace_existing=False,
-            id=_JOB_ID,
-        )
+        if not self._job_running:
+            # Schedule immediate run using a DateTrigger with unique ID
+            self._scheduler.add_job(
+                self._run,
+                trigger=DateTrigger(run_date=utcdatetime(), timezone=datetime.timezone.utc),
+                max_instances=1,
+                coalesce=True,
+                replace_existing=False,
+                id=f"run_now_{utcdatetime()}",
+            )
+        else:
+            self._logr.info("Job is already running, skipping immediate run")
 
     def close(self):
         """Shutdown the scheduler."""

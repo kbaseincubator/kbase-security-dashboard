@@ -23,13 +23,17 @@ response = requests.get(
 
 if response.status_code == 200:
     print(f"✓ Token is valid for user: {response.json()['login']}")
-    scopes = response.headers.get('X-OAuth-Scopes', 'none')
-    print(f"Token scopes: {scopes}")
+    scopes = response.headers.get('X-OAuth-Scopes', '')
+    scope_list = [s.strip() for s in scopes.split(',') if s.strip()]
 
-    if 'read:packages' in scopes:
-        print("✓ Has read:packages scope")
+    required_scopes = ['repo', 'read:packages']
+    missing_scopes = [scope for scope in required_scopes if scope not in scope_list]
+
+    if missing_scopes:
+        print(f"✗ Missing required scopes: {', '.join(missing_scopes)}")
+        sys.exit(1)
     else:
-        print("✗ Missing read:packages scope - this is likely your issue!")
+        print("✓ Token has all required scopes")
 else:
     print(f"✗ Token check failed: {response.status_code}")
     print(response.text)

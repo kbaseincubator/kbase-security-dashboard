@@ -8,6 +8,7 @@ Reads configuration from TOML file and collects:
 - Vulnerability counts (Dependabot + Code Scanning)
 """
 
+import datetime
 import logging
 import psycopg2
 
@@ -92,29 +93,33 @@ def process_repos(
             # 1. Sync coverage data
             logr.info(f"Syncing coverage data for {org}/{repo}...")
             codecov_load.sync_coverage_data(conn, org, repo, branches=branches)
-            
+
             # 2. Take test status snapshot
             logr.info(f"Taking test status snapshot for {org}/{repo}...")
             gha_test_actions_load.take_snapshot(
-                conn, 
-                org, 
-                repo, 
+                conn,
+                org,
+                repo,
                 branches=branches,
                 workflow_filter=workflow_filter,
                 github_token=github_token
             )
-            
+
+            # Generate a single snapshot timestamp for this repo to enable cross-table queries
+            snapshot_date = datetime.datetime.now(datetime.timezone.utc)
+            logr.info(f"Snapshot timestamp: {snapshot_date}")
+
             # 3. Take Dependabot PR snapshot
             logr.info(f"Taking Dependabot PR snapshot for {org}/{repo}...")
-            dependabot_load.take_snapshot(conn, org, repo, github_token=github_token)
-            
+            dependabot_load.take_snapshot(conn, org, repo, snapshot_date, github_token)
+
             # 4. Take vulnerability snapshot
             logr.info(f"Taking vulnerability snapshot for {org}/{repo}...")
-            vulnerabilities_load.take_snapshot(conn, org, repo, github_token=github_token)
+            vulnerabilities_load.take_snapshot(conn, org, repo, snapshot_date, github_token)
 
             # 5. Take Trivy scan snapshot
             logr.info(f"Taking Trivy scan snapshot for {org}/{repo}...")
-            trivy_load.take_snapshot(conn, org, repo, branches=branches, github_token=github_token)
+            trivy_load.take_snapshot(conn, org, repo, branches, snapshot_date, github_token)
 
             logr.info(f"✓ Completed {org}/{repo}")
             

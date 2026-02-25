@@ -2,6 +2,7 @@
 Load Trivy scan data into postgres.
 """
 
+import datetime
 import logging
 import psycopg2
 
@@ -40,6 +41,7 @@ def init_table(conn: psycopg2.extensions.connection):
 def save_snapshot(
     conn: psycopg2.extensions.connection,
     snapshot: TrivySnapshot,
+    snapshot_date: datetime.datetime,
 ):
     """
     Insert a Trivy scan snapshot into the table.
@@ -58,7 +60,7 @@ def save_snapshot(
                 snapshot.owner_org,
                 snapshot.repo,
                 snapshot.branch,
-                snapshot.snapshot_date,
+                snapshot_date,
                 snapshot.image_tags,
                 snapshot.critical,
                 snapshot.high,
@@ -74,6 +76,7 @@ def take_snapshot(
     owner_org: str,
     repo: str,
     branches: set[str],
+    snapshot_date: datetime.datetime,
     github_token: str,
 ):
     """
@@ -86,6 +89,7 @@ def take_snapshot(
     owner_org - the owner or organization that owns the repo
     repo - the repo name
     branches - set of branch names to scan (e.g., {"main", "develop"})
+    snapshot_date - the timestamp to use for this snapshot
     github_token - GitHub personal access token with read:packages scope.
         Note this must be a classic token to access repos you don't own.
 
@@ -99,7 +103,7 @@ def take_snapshot(
         snapshot = get_trivy_snapshot(owner_org, repo, branch, github_token)
 
         if snapshot:
-            save_snapshot(conn, snapshot)
+            save_snapshot(conn, snapshot, snapshot_date)
             logr.info(
                 f"Saved Trivy snapshot for {owner_org}/{repo} "
                 f"({branch}, tags={snapshot.image_tags})"

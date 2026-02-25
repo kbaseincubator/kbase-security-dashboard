@@ -3,7 +3,6 @@ Fetches open Dependabot PRs from GitHub.
 """
 
 from dataclasses import dataclass
-import datetime
 import logging
 import re
 from typing import Any
@@ -17,25 +16,22 @@ _PER_PAGE = 100
 
 @dataclass
 class DependabotSnapshot:
-    
+
     owner_org: str
     """ The repo owner or organization. """
-    
+
     repo: str
     """ The repo name. """
-    
-    snapshot_date: datetime.datetime
-    """ When this snapshot was taken. """
-    
+
     total_prs: int
     """ Total number of open Dependabot PRs. """
-    
+
     total_dependencies: int
     """ Total number of dependencies with updates (accounting for grouped PRs). """
-    
+
     grouped_prs: int
     """ Number of PRs that update multiple dependencies. """
-    
+
     single_prs: int
     """ Number of PRs that update a single dependency. """
 
@@ -75,11 +71,11 @@ def get_dependabot_snapshot(
 ) -> DependabotSnapshot:
     """
     Get a snapshot of open Dependabot PRs for a GitHub repo.
-    
+
     owner_or_org - the owner or organization that owns the repo
     repo - the repo name
     github_token - optional GitHub personal access token for higher rate limits
-    
+
     Returns a DependabotSnapshot with counts of open PRs and dependencies.
     """
     logr = logging.getLogger(__name__)
@@ -138,7 +134,6 @@ def get_dependabot_snapshot(
     return DependabotSnapshot(
         owner_org=owner_or_org,
         repo=repo,
-        snapshot_date=datetime.datetime.now(datetime.timezone.utc),
         total_prs=len(dependabot_prs),
         total_dependencies=total_dependencies,
         grouped_prs=grouped_prs,

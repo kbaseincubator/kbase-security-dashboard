@@ -2,6 +2,7 @@
 Load Dependabot snapshot data into postgres.
 """
 
+import datetime
 import psycopg2
 from psycopg2.extras import execute_values
 
@@ -35,10 +36,11 @@ def init_table(conn: psycopg2.extensions.connection):
 def save_snapshot(
     conn: psycopg2.extensions.connection,
     snapshot: DependabotSnapshot,
+    snapshot_date: datetime.datetime,
 ):
     """
     Insert a Dependabot snapshot into the table.
-    
+
     If a snapshot already exists for the same repo and timestamp,
     it will be updated with the new values.
     """
@@ -52,7 +54,7 @@ def save_snapshot(
             (
                 snapshot.owner_org,
                 snapshot.repo,
-                snapshot.snapshot_date,
+                snapshot_date,
                 snapshot.total_dependencies,
             )
         )
@@ -63,16 +65,18 @@ def take_snapshot(
     conn: psycopg2.extensions.connection,
     owner_org: str,
     repo: str,
+    snapshot_date: datetime.datetime,
     github_token: str | None = None,
 ):
     """
     Convenience function to take a snapshot and save it in one call.
-    
+
     conn - psycopg2 database connection
     owner_org - the owner or organization that owns the repo
     repo - the repo name
+    snapshot_date - the timestamp to use for this snapshot
     github_token - optional GitHub personal access token for higher rate limits
     """
-    
+
     snapshot = get_dependabot_snapshot(owner_org, repo, github_token)
-    save_snapshot(conn, snapshot)
+    save_snapshot(conn, snapshot, snapshot_date)

@@ -4,7 +4,6 @@ Fetches vulnerability data from GitHub Dependabot alerts and Code Scanning alert
 
 from collections import defaultdict
 from dataclasses import dataclass
-import datetime
 import logging
 import requests
 
@@ -32,25 +31,22 @@ def _get_severity(severity: str) -> str:
 
 @dataclass
 class VulnerabilitySnapshot:
-    
+
     owner_org: str
     """ The repo owner or organization. """
-    
+
     repo: str
     """ The repo name. """
-    
-    snapshot_date: datetime.datetime
-    """ When this snapshot was taken. """
-    
+
     critical: int
     """ Number of critical severity vulnerabilities. """
-    
+
     high: int
     """ Number of high severity vulnerabilities. """
-    
+
     medium: int
     """ Number of medium severity vulnerabilities. """
-    
+
     low: int
     """ Number of low severity vulnerabilities. """
 
@@ -181,14 +177,14 @@ def get_vulnerability_snapshot(
 ) -> VulnerabilitySnapshot:
     """
     Get a snapshot of open vulnerabilities for a GitHub repo.
-    
+
     Combines Dependabot alerts and Code Scanning alerts (e.g., Trivy).
-    
+
     owner_or_org - the owner or organization that owns the repo
     repo - the repo name
     github_token - GitHub personal access token. Note this must
         be a classic token to access repos you don't own
-    
+
     Returns a VulnerabilitySnapshot with counts by severity level.
     """
     logr = logging.getLogger(__name__)
@@ -210,7 +206,6 @@ def get_vulnerability_snapshot(
     snapshot = VulnerabilitySnapshot(
         owner_org=owner_or_org,
         repo=repo,
-        snapshot_date=datetime.datetime.now(datetime.timezone.utc),
         critical=combined_counts.get("critical", 0),
         high=combined_counts.get("high", 0),
         medium=combined_counts.get("medium", 0),

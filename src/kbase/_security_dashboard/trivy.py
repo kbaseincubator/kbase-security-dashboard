@@ -3,7 +3,6 @@ Trivy security scanning for container images in GitHub Container Registry.
 """
 
 from dataclasses import dataclass
-import datetime
 import logging
 
 from kbase._security_dashboard.image_util import get_latest_container_image
@@ -24,9 +23,6 @@ class TrivySnapshot:
 
     branch: str
     """ The branch this image corresponds to (main/master/develop). """
-
-    snapshot_date: datetime.datetime
-    """ When this snapshot was taken. """
 
     image_tags: list[str]
     """ All tags for the image that was scanned (e.g., ['latest', 'v1.2.3']). """
@@ -87,7 +83,6 @@ def get_trivy_snapshot(
         owner_org=owner_or_org,
         repo=repo,
         branch=branch,
-        snapshot_date=datetime.datetime.now(datetime.timezone.utc),
         image_tags=image.tags,
         critical=scan_result.critical,
         high=scan_result.high,

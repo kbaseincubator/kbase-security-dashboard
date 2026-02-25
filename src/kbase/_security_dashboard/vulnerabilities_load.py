@@ -2,6 +2,7 @@
 Load vulnerability snapshot data into postgres.
 """
 
+import datetime
 import logging
 import psycopg2
 
@@ -38,16 +39,17 @@ def init_table(conn: psycopg2.extensions.connection):
 def save_snapshot(
     conn: psycopg2.extensions.connection,
     snapshot: VulnerabilitySnapshot,
+    snapshot_date: datetime.datetime,
 ):
     """
     Insert a vulnerability snapshot into the table.
-    
+
     Does nothing on conflict (same repo/snapshot_date already exists).
     """
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO vulnerability_snapshots 
+            INSERT INTO vulnerability_snapshots
                 (org_user, repo, timestamp, critical, high, medium, low)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (org_user, repo, timestamp) DO NOTHING
@@ -55,7 +57,7 @@ def save_snapshot(
             (
                 snapshot.owner_org,
                 snapshot.repo,
-                snapshot.snapshot_date,
+                snapshot_date,
                 snapshot.critical,
                 snapshot.high,
                 snapshot.medium,
@@ -69,21 +71,23 @@ def take_snapshot(
     conn: psycopg2.extensions.connection,
     owner_org: str,
     repo: str,
+    snapshot_date: datetime.datetime,
     github_token: str,
 ):
     """
     Convenience function to take a vulnerability snapshot and save it in one call.
-    
+
     conn - psycopg2 database connection
     owner_org - the owner or organization that owns the repo
     repo - the repo name
-    github_token -     github_token - GitHub personal access token. Note this must
+    snapshot_date - the timestamp to use for this snapshot
+    github_token - GitHub personal access token. Note this must
         be a classic token to access repos you don't own
     """
     from kbase._security_dashboard.vulnerabilities import get_vulnerability_snapshot
-    
+
     logr = logging.getLogger(__name__)
-    
+
     snapshot = get_vulnerability_snapshot(owner_org, repo, github_token)
-    save_snapshot(conn, snapshot)
+    save_snapshot(conn, snapshot, snapshot_date)
     logr.info(f"Saved vulnerability snapshot for {owner_org}/{repo}")

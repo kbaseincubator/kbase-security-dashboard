@@ -7,9 +7,19 @@ RUN GITCOMMIT=$(git rev-parse HEAD) && echo "GIT_COMMIT=\"$GITCOMMIT\"" > /git/g
 
 FROM python:3.13
 
-# libpw-dev is required for psycopg2
-RUN apt update \
+ENV TRIVY_VER=0.69.1
+ENV TRIVY_SHA=866c525bb6ff5d7b89da626e56e5e72019d7bcda8043cbb8324515b54ae0a411
+
+# libpq-dev is required for psycopg2
+# Install Trivy for container scanning
+WORKDIR /opt
+RUN TRIVY_FILE=trivy_${TRIVY_VER}_Linux-64bit.deb \
+    && apt update \
     && apt install -y tini libpq-dev \
+    && wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VER}/${TRIVY_FILE} \
+    && echo "$TRIVY_SHA  ${TRIVY_FILE}" | sha256sum --check \
+    && dpkg -i ${TRIVY_FILE} \
+    && rm ${TRIVY_FILE} \
     && rm -rf /var/lib/apt/lists/* 
 
 # install uv

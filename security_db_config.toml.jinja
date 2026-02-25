@@ -18,8 +18,8 @@ root_path = "{{ SECDB_SERVICE_ROOT_PATH or "" }}"
 schedule_cron = "{{ SECDB_SCHEDULE_CRON or "* 8 * * sun" }}"
 
 [github]
-# Classic Personal Access Token with 'repo' scope. Fine grained tokens can work if only the
-# user's own repositories are accessed.
+# Classic Personal Access Token with 'repo' and 'read:packages' scopes. Fine grained tokens
+# can work if only the user's own repositories are accessed.
 token = "{{ SECDB_GITHHUB_TOKEN or "" }}"
 
 [postgres]

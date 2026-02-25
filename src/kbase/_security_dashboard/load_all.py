@@ -17,6 +17,7 @@ from kbase._security_dashboard import gha_test_actions_load
 from kbase._security_dashboard import dependabot_load
 from kbase._security_dashboard import vulnerabilities_load
 from kbase._security_dashboard import repo_metadata
+from kbase._security_dashboard import trivy_load
 
 
 def _init_all_tables(conn: psycopg2.extensions.connection):
@@ -24,7 +25,8 @@ def _init_all_tables(conn: psycopg2.extensions.connection):
     logr = logging.getLogger(__name__)
     logr.info("Initializing database tables...")
     for mod in [
-        codecov_load, gha_test_actions_load, dependabot_load, vulnerabilities_load, repo_metadata
+        codecov_load, gha_test_actions_load, dependabot_load, vulnerabilities_load,
+        repo_metadata, trivy_load
     ]:
         mod.init_table(conn)
     logr.info("Database tables initialized")
@@ -109,7 +111,11 @@ def process_repos(
             # 4. Take vulnerability snapshot
             logr.info(f"Taking vulnerability snapshot for {org}/{repo}...")
             vulnerabilities_load.take_snapshot(conn, org, repo, github_token=github_token)
-            
+
+            # 5. Take Trivy scan snapshot
+            logr.info(f"Taking Trivy scan snapshot for {org}/{repo}...")
+            trivy_load.take_snapshot(conn, org, repo, branches=branches, github_token=github_token)
+
             logr.info(f"✓ Completed {org}/{repo}")
             
         except Exception as e:

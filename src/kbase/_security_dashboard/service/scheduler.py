@@ -109,12 +109,16 @@ class RepoETLScheduler:
         self._job_running = True
         self._logr.info("Running ETL process in scheduler")
         err = None
+        conn = None
         try:
-            process_repos(self._get_connection(), self._github_token, self._repos)
+            conn = self._get_connection()
+            process_repos(conn, self._github_token, self._repos)
         except Exception as e:
             self._logr.exception(f"ETL process failed: {e}")
             err = traceback.format_exc()
         finally:
+            if conn:
+                conn.close()
             self.result = ETLResult(time_complete=utcdatetime(), exception=err)
             self._job_running = False
 

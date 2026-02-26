@@ -1,52 +1,58 @@
-For tables using cross filtering instead of native filtering, replace the org_user and
-repo columns in the select with
+## Main Table Query
 
-```
-r.org_user || '/' || r.repo AS repository,
-```
+The main table query combines org_user and repo into a single "repository" column using:
 
-or
-
-```
-org_user || '/' || repo AS repository,
+```sql
+org_user || '/' || repo AS repository
 ```
 
-That allows users to click on a single cell and have the cross filter work on both org and repo.
-For native filtering, added filters on org / repo / branch and scoped them to the detail
-tables only.
+This allows cross-filtering to work on both org and repo with a single click.
 
+## Security Issues Columns
 
-Layout was:
+The main table includes two security columns that aggregate data from multiple sources:
+
+- **`sec_crit`**: Sum of critical severity issues from:
+  - Dependabot alerts (repo-wide)
+  - Code Scanning alerts (branch-specific)
+  - Trivy container scans (branch-specific)
+
+- **`sec_high`**: Sum of high severity issues from the same three sources
+
+**Note:** Dependabot alerts are repo-wide and appear in both main and develop branch rows.
+
+## Dashboard Layout
 
 * Column 1
     * Text noting that 0 in a cell could mean that the check isn't working
-        * E.g. for dependabot or vulnerabilities
+        * E.g. for dependabot PRs or security alerts
     * Main table
         * Has a native filter on branch
         * Color coding
             * Coverage
                 * Green for > 80
                 * Red for =< 80
-            * Red for dependencies and critical vulns
-            * Yellow for high vulns
+            * Red for dependencies, sec_crit
+            * Yellow for sec_high
 * Column 2
     * Test result table
     * Coverage line chart
-        * Dimension was branch for cross filtered version only
+        * branch as dimension
 * Column 3
-    * Security updates line chart
-    * Vulnerabilities line chart
-        * Updated legend names to match color info in JSON below
-    
-Labels were sorted via category name ascending
-    
-In the dashboard JSON added:
+    * Dependabot PRs line chart
+    * Security issues line charts (separate charts for each source)
 
-```
+Labels were sorted via category name ascending
+
+## Dashboard JSON Configuration
+
+In the dashboard JSON, add:
+
+```json
   "label_colors": {
     "Critical": "#DC3545",
     "High": "#FD7E14",
     "Medium": "#FFC107",
     "Low": "#28A745"
-  },
+  }
 ```

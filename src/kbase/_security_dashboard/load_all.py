@@ -5,7 +5,9 @@ Reads configuration from TOML file and collects:
 - Code coverage from Codecov
 - Test status from GitHub Actions
 - Dependabot PR counts
-- Vulnerability counts (Dependabot + Code Scanning)
+- Dependabot security alerts
+- Code Scanning security alerts (branch-specific)
+- Trivy container scan results
 """
 
 import datetime
@@ -16,7 +18,8 @@ import psycopg2
 from kbase._security_dashboard import codecov_load
 from kbase._security_dashboard import gha_test_actions_load
 from kbase._security_dashboard import dependabot_load
-from kbase._security_dashboard import vulnerabilities_load
+from kbase._security_dashboard import dependabot_alerts_load
+from kbase._security_dashboard import code_scanning_alerts_load
 from kbase._security_dashboard import repo_metadata
 from kbase._security_dashboard import trivy_load
 
@@ -26,7 +29,8 @@ def _init_all_tables(conn: psycopg2.extensions.connection):
     logr = logging.getLogger(__name__)
     logr.info("Initializing database tables...")
     for mod in [
-        codecov_load, gha_test_actions_load, dependabot_load, vulnerabilities_load,
+        codecov_load, gha_test_actions_load, dependabot_load,
+        dependabot_alerts_load, code_scanning_alerts_load,
         repo_metadata, trivy_load
     ]:
         mod.init_table(conn)
@@ -113,11 +117,15 @@ def process_repos(
             logr.info(f"Taking Dependabot PR snapshot for {org}/{repo}...")
             dependabot_load.take_snapshot(conn, org, repo, snapshot_date, github_token)
 
-            # 4. Take vulnerability snapshot
-            logr.info(f"Taking vulnerability snapshot for {org}/{repo}...")
-            vulnerabilities_load.take_snapshot(conn, org, repo, snapshot_date, github_token)
+            # 4. Take Dependabot alerts snapshot
+            logr.info(f"Taking Dependabot alerts snapshot for {org}/{repo}...")
+            dependabot_alerts_load.take_snapshot(conn, org, repo, snapshot_date, github_token)
 
-            # 5. Take Trivy scan snapshot
+            # 5. Take Code Scanning alerts snapshot
+            logr.info(f"Taking Code Scanning alerts snapshot for {org}/{repo}...")
+            code_scanning_alerts_load.take_snapshot(conn, org, repo, branches, snapshot_date, github_token)
+
+            # 6. Take Trivy scan snapshot
             logr.info(f"Taking Trivy scan snapshot for {org}/{repo}...")
             trivy_load.take_snapshot(conn, org, repo, branches, snapshot_date, github_token)
 

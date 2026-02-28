@@ -1,9 +1,13 @@
+```sql
 WITH repos_expanded AS (
     -- Create one row per repo per branch (main and dev)
+    -- branch is the actual branch name used for JOINs
+    -- cnclbrnch is the canonical name shown in the dashboard (always main/develop)
     SELECT
         org_user,
         repo,
         main_branch AS branch,
+        'main' AS cnclbrnch,
         1 AS branch_order  -- main branch first
     FROM repo_metadata
 
@@ -13,6 +17,7 @@ WITH repos_expanded AS (
         org_user,
         repo,
         dev_branch AS branch,
+        'develop' AS cnclbrnch,
         2 AS branch_order  -- dev branch second
     FROM repo_metadata
 ),
@@ -86,7 +91,7 @@ latest_trivy AS (
 
 SELECT
     r.org_user || '/' || r.repo AS repository,
-    r.branch,
+    r.cnclbrnch,
     ts.test_status,
     c.coverage,
     d.dependencies,
@@ -113,3 +118,4 @@ LEFT JOIN latest_trivy t ON r.org_user = t.org_user
     AND r.repo = t.repo
     AND r.branch = t.branch
 ORDER BY r.org_user, r.repo, r.branch_order;
+```

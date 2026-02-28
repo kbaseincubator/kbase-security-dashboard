@@ -1,6 +1,6 @@
-## Main Table Query
+## Org / repo joining
 
-The main table query combines org_user and repo into a single "repository" column using:
+The queries combine org_user and repo into a single "repository" column using:
 
 ```sql
 org_user || '/' || repo AS repository
@@ -24,10 +24,15 @@ The main table includes two security columns that aggregate data from multiple s
 ## Dashboard Layout
 
 * Column 1
-    * Text noting that 0 in a cell could mean that the check isn't working
+    * Text:
+        ```
+        * Note that 0 may mean "no issues" or "check isn't working"
+        * Graphs are not meaningful until a repo is selected in the main table
+        ```
         * E.g. for dependabot PRs or security alerts
     * Main table
-        * Has a native multiselect filter on branch
+        * No branch column
+            * Could add a "real branch" column, YAGNI
         * Color coding
             * Coverage
                 * Green for > 80
@@ -46,10 +51,13 @@ The main table includes two security columns that aggregate data from multiple s
     * For all 3 charts:
         * Metrics are renamed to Critical, High, Medium, Low
             * See JSON color configuration below
-    * For the last 2 charts:
-        * Has a native single select filter on branch requiring a default value
 
-General notes:
+## Dashboard General Configuration
+
+* Dashboard has a native single select filter on cnclbrnch that
+    * requires a value
+    * has a default of main
+    * applies to the main table and the code and trivy alerts tables
 * Dimension labels were sorted via category name ascending
 * For all line charts and scatter plots, values were averaged over each day
 

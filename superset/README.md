@@ -12,12 +12,12 @@ This allows cross-filtering to work on both org and repo with a single click.
 
 The main table includes two security columns that aggregate data from multiple sources:
 
-- **`sec_crit`**: Sum of critical severity issues from:
-  - Dependabot alerts (repo-wide)
-  - Code Scanning alerts (branch-specific)
-  - Trivy container scans (branch-specific)
+- `sec_crit`: Sum of critical severity issues from:
+    - Dependabot alerts (repo-wide)
+    - Code Scanning alerts (branch-specific)
+    - Trivy container scans (branch-specific)
 
-- **`sec_high`**: Sum of high severity issues from the same three sources
+- `sec_high`: Sum of high severity issues from the same three sources
 
 **Note:** Dependabot alerts are repo-wide and appear in both main and develop branch rows.
 
@@ -27,7 +27,7 @@ The main table includes two security columns that aggregate data from multiple s
     * Text noting that 0 in a cell could mean that the check isn't working
         * E.g. for dependabot PRs or security alerts
     * Main table
-        * Has a native filter on branch
+        * Has a native multiselect filter on branch
         * Color coding
             * Coverage
                 * Green for > 80
@@ -35,14 +35,23 @@ The main table includes two security columns that aggregate data from multiple s
             * Red for dependencies, sec_crit
             * Yellow for sec_high
 * Column 2
-    * Test result table
-    * Coverage line chart
+    * Test result table (multiple branches)
+    * Coverage scatter plot
         * branch as dimension
+    * Dependabot updates line chart
 * Column 3
-    * Dependabot PRs line chart
-    * Security issues line charts (separate charts for each source)
+    * Dependabot alerts line chart
+    * Code scanning alerts line chart
+    * Trivy alerts line chart
+    * For all 3 charts:
+        * Metrics are renamed to Critical, High, Medium, Low
+            * See JSON color configuration below
+    * For the last 2 charts:
+        * Has a native single select filter on branch requiring a default value
 
-Labels were sorted via category name ascending
+General notes:
+* Dimension labels were sorted via category name ascending
+* For all line charts and scatter plots, values were averaged over each day
 
 ## Dashboard JSON Configuration
 

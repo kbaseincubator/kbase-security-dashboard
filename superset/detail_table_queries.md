@@ -3,8 +3,7 @@ Test:
 ```
 SELECT 
     timestamp,
-    org_user AS org,
-    repo,
+    org_user || '/' || repo AS repository,
     branch,
     CASE
         WHEN success THEN '✅ Pass'
@@ -19,8 +18,7 @@ Coverage:
 ```
 SELECT 
     timestamp,
-    org_user AS org,
-    repo,
+    org_user || '/' || repo AS repository,
     branch,
     coverage
 FROM coverage_history
@@ -32,24 +30,52 @@ Dependabot:
 ```
 SELECT 
     timestamp,
-    org_user AS org,
-    repo,
+    org_user || '/' || repo AS repository,
     dependencies
 FROM dependabot_snapshots
 ORDER BY timestamp
 ```
 
-CVEs:
+Dependabot alerts:
 
 ```
 SELECT 
     timestamp,
-    org_user AS org,
-    repo,
+    org_user || '/' || repo AS repository,
     critical,
     high,
     medium,
     low
-FROM vulnerability_snapshots
+FROM dependabot_alerts
+ORDER BY timestamp
+```
+
+Code scanning alerts:
+
+```
+SELECT 
+    timestamp,
+    org_user || '/' || repo AS repository,
+    branch,
+    critical,
+    high,
+    medium,
+    low
+FROM code_scanning_alerts
+ORDER BY timestamp
+```
+
+Trivy alerts:
+
+```
+SELECT 
+    timestamp,
+    org_user || '/' || repo AS repository,
+    branch,
+    critical,
+    high,
+    medium,
+    low
+FROM trivy_scans
 ORDER BY timestamp
 ```
